@@ -1,0 +1,1771 @@
+{
+  "name": "My workflow 3",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "0533ff0d-41c1-4882-a062-01fa15a168f6",
+      "name": "When clicking ‘Test workflow’",
+      "type": "n8n-nodes-base.manualTrigger",
+      "position": [
+        528,
+        304
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Try me out!\n\n### This workflow converts a Candidate Resume PDF to an image which is then \"read\" by a Vision Language Model (VLM). The VLM assesses if the candidate's CV is a fit for the desired role.\n\nThis approach can be employed to combat \"hidden prompts\" planted in resumes to bypass and/or manipulate automated ATS systems using AI.\n\n\n### Need Help?\nJoin the [Discord](https://discord.com/invite/XPKeKXeB7d) or ask in the [Forum](https://community.n8n.io/)!\n",
+        "height": 401.24529475392126,
+        "width": 365.05232558139534
+      },
+      "id": "bb938da3-ee08-43b0-b85d-eb943adce025",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\t\"is_qualified\": true,\n\t\"reason\": \"\"\n}"
+      },
+      "id": "d02f233a-9449-4acd-bf02-742847fca323",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "position": [
+        1984,
+        448
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "4dd69ba3-bf07-43b3-86b7-d94b07e9eea6",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json.output.is_qualified }}",
+              "rightValue": ""
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6f9d1215-c96b-43b0-8b24-0853bc0f3184",
+      "name": "Should Proceed To Stage 2?",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        2144,
+        288
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "content": "## 1. Download Candidate Resume\n[Read more about using Google Drive](https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.googledrive)\n\nFor this demonstration, we'll pull the candidate's resume PDF from Google Drive but you can just as easily recieve this resume from email or your ATS.\n\nIt should be noted that our PDF is a special test case which has been deliberately injected with an AI bypass; the bypass is a hidden prompt which aims to override AI instructions and auto-qualify the candidate... sneaky!\n\nDownload a copy of this resume here: https://drive.google.com/file/d/1MORAdeev6cMcTJBV2EYALAwll8gCDRav/view?usp=sharing",
+        "height": 563.6162790697684,
+        "width": 543.5706868577606,
+        "color": 7
+      },
+      "id": "e7c431eb-75b2-4741-91cb-6cb092eb2483",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        400,
+        0
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1MORAdeev6cMcTJBV2EYALAwll8gCDRav"
+        },
+        "options": {}
+      },
+      "id": "e2dd8d7e-fab1-42d0-8bd2-ab0d3b7da93d",
+      "name": "Download Resume",
+      "type": "n8n-nodes-base.googleDrive",
+      "position": [
+        704,
+        304
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "content": "## 2. Convert PDF to Image(s)\n[Read more about using Stirling PDF](https://github.com/Stirling-Tools/Stirling-PDF)\n\nAI vision models can only accept images (and sometimes videos!) as non-text inputs but not PDFs at time of writing. We'll have to convert our PDF to an image in order to use it.\n\nHere, we'll use a tool called **Stirling PDF** which can provide this functionality and can be accessed via a HTTP API. Feel free to use an alternative solution if available, otherwise follow the instructions on the Stirling PDF website to set up your own instance.\n\nAdditionally, we'll reduce the resolution of our converted image to speed up the processing done by the LLM. I find that about 75% of an A4 (30x40cm) is a good balance.",
+        "height": 595.3148729042731,
+        "width": 605.0267171444024,
+        "color": 7
+      },
+      "id": "f8cae8c4-6d52-4367-85a3-3fb34010844a",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        992,
+        0
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 3. Parse Resume with Multimodal LLM\n[Read more about using Basic LLM Chain](https://docs.n8n.io/integrations/builtin/cluster-nodes/root-nodes/n8n-nodes-langchain.chainllm/)\n\nMultimodal LLMs are LLMs which can accept binary inputs such as images, audio and/or video files. Most newer LLMs are by default multimodal and we'll use Google's Gemini here as an example. By processing each candidate's resume as an image, we avoid scenarios where text extraction fails due to layout issues or by picking up \"hidden\" or malicious prompts planted to subvert AI automated processing.\n\nThis vision model ensures the resume is read and understood as a human would. The hidden bypass is therefore rendered mute since the AI also cannot \"see\" the special prompt embedded in the document.",
+        "height": 603.1395348837208,
+        "width": 747.8139534883712,
+        "color": 7
+      },
+      "id": "236a3279-cc77-4cb9-a724-897952d15df7",
+      "name": "Sticky Note3",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1632,
+        0
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://stirlingpdf.io/api/v1/convert/pdf/img",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "fileInput",
+              "inputDataFieldName": "data"
+            },
+            {
+              "name": "imageFormat",
+              "value": "jpg"
+            },
+            {
+              "name": "singleOrMultiple",
+              "value": "single"
+            },
+            {
+              "name": "dpi",
+              "value": "300"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2eec6949-43e0-4ddb-aaa3-257c9fbcf5ab",
+      "name": "PDF-to-Image API",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1120,
+        352
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "operation": "resize",
+        "width": 75,
+        "height": 75,
+        "resizeOption": "percent",
+        "options": {}
+      },
+      "id": "a7cdb179-a6d7-486b-8dd5-1bcdaf6da793",
+      "name": "Resize Converted Image",
+      "type": "n8n-nodes-base.editImage",
+      "position": [
+        1312,
+        352
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-1.5-pro-latest",
+        "options": {}
+      },
+      "id": "b7e56771-dd58-4bd4-9a49-62ef9b1afcc3",
+      "name": "Google Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "position": [
+        1792,
+        448
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Evaluate the candidate's resume.",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=Assess the given Candiate Resume for the role of Plumber.\nDetermine if the candidate's skills match the role and if they qualify for an in-person interview."
+            },
+            {
+              "type": "HumanMessagePromptTemplate",
+              "messageType": "imageBinary"
+            }
+          ]
+        }
+      },
+      "id": "4bbe351b-d528-4a92-8ccb-3c636a0bb384",
+      "name": "Candidate Resume Analyser",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [
+        1792,
+        288
+      ],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "content": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n### Data Privacy Warning!\nFor demo purposes, we're using the public online version of Stirling PDF. It is recommended to setup your own private instance of Stirling PDF before using this workflow in production.",
+        "height": 418.95152406706313,
+        "width": 225.51725256895617
+      },
+      "id": "22252ec5-a0ab-420c-986e-db72c17a7ad2",
+      "name": "Sticky Note4",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1072,
+        304
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "5a5e875e-374a-4416-9583-164bbe292073",
+      "name": "Embeddings OpenAI",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "position": [
+        2320,
+        32
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "file_url",
+                "value": "={{ $json.file_url }}"
+              },
+              {
+                "name": "file_name",
+                "value": "={{ $('Add in metadata').item.json.file_name }}"
+              }
+            ]
+          }
+        }
+      },
+      "id": "678dbe48-87a6-4853-9279-1c42f6a6ad52",
+      "name": "Default Data Loader",
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "position": [
+        2496,
+        32
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "50025ff5-1b53-475f-b150-2aafef1c4c21",
+              "name": "file_url",
+              "type": "string",
+              "value": " https://drive.google.com/file/d/11Koq9q53nkk0F5Y8eZgaWJUVR03I4-MM/view"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "724c150f-c4cf-4213-ab83-acc35695a1c4",
+      "name": "Set file URL in Google Drive",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1744,
+        -192
+      ],
+      "typeVersion": 3.3
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Add a new field called 'myNewField' to the JSON of the item\n$input.item.json.file_name = $input.item.binary.data.fileName;\n$input.item.json.file_ext = $input.item.binary.data.fileExtension;\n$input.item.json.file_url = $('Set file URL in Google Drive').item.json.file_url\n\nreturn $input.item;"
+      },
+      "id": "a3bcc288-8224-4590-ae90-1d6652a22db3",
+      "name": "Add in metadata",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        2160,
+        -192
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "mode": "url",
+          "value": "={{ $json.file_url }}"
+        },
+        "options": {}
+      },
+      "id": "3d3bf495-74db-421f-a512-e087592e0568",
+      "name": "Download file",
+      "type": "n8n-nodes-base.googleDrive",
+      "position": [
+        1936,
+        -192
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "d05aaddc-10ac-4124-a0cd-2f88ad4d4b4f",
+      "name": "Chat Trigger",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "position": [
+        1520,
+        528
+      ],
+      "webhookId": "1727c687-aed0-49cf-96af-e7796819fbb3",
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "jsCode": "let out = \"\"\nfor (const i in $input.all()) {\n let itemText = \"--- CHUNK \" + i + \" ---\\n\"\n itemText += $input.all()[i].json.document.pageContent + \"\\n\"\n itemText += \"\\n\"\n out += itemText\n}\n\nreturn {\n 'context': out\n};"
+      },
+      "id": "7cdd2382-3a99-401f-8fae-6136b8ee0af1",
+      "name": "Prepare chunks",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        2336,
+        528
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "e9e09b08-0394-4bb6-81b6-28cddbef4085",
+      "name": "Embeddings OpenAI2",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "position": [
+        1968,
+        752
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "a5cc5267-b6dd-4b74-85ff-f14cd3ad4b51",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        2576,
+        752
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "236047ff-75a2-47fd-b338-1e9763c4015e",
+              "name": "chunks",
+              "type": "number",
+              "value": 4
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "48d3d6e8-e91a-43db-b9de-15b4fd79a11b",
+      "name": "Set max chunks to send to model",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1744,
+        528
+      ],
+      "typeVersion": 3.3
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "67ecefcf-a30c-4cc4-89ca-b9b23edd6585",
+              "name": "citations",
+              "type": "array",
+              "value": "={{ $json.citations.map(i => '[' + $('Get top chunks matching query').all()[$json.citations].json.document.metadata.file_name + ', lines ' + $('Get top chunks matching query').all()[$json.citations].json.document.metadata['loc.lines.from'] + '-' + $('Get top chunks matching query').all()[$json.citations].json.document.metadata['loc.lines.to'] + ']') }}"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "aa20bcab-f00a-42bd-b22b-d4546ecc41ca",
+      "name": "Compose citations",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        2944,
+        528
+      ],
+      "typeVersion": 3.3
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d77956c4-0ff4-4c64-80c2-9da9d4c8ad34",
+              "name": "text",
+              "type": "string",
+              "value": "={{ $json.answer }} {{ $if(!$json.citations.isEmpty(), \"\\n\" + $json.citations.join(\"\"), '') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fff13ecd-4e96-497b-aaa5-0020e9175b68",
+      "name": "Generate response",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        3168,
+        528
+      ],
+      "typeVersion": 3.3
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Use the following pieces of context to answer the question at the end. If you don't know the answer, just say that you don't know, don't try to make up an answer. Important: In your response, also include the the indexes of the chunks you used to generate the answer.\n\n{{ $json.context }}\n\nQuestion: {{ $(\"Chat Trigger\").first().json.chatInput }}\nHelpful Answer:",
+        "hasOutputParser": true
+      },
+      "id": "07ff8b63-d38d-4bee-b6a0-bd9ba76f64ae",
+      "name": "Answer the query based on chunks",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [
+        2560,
+        528
+      ],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "mode": "load",
+        "pineconeIndex": {
+          "__rl": true,
+          "mode": "list",
+          "value": "test-index",
+          "cachedResultName": "test-index"
+        },
+        "prompt": "={{ $json.chatInput }}",
+        "topK": "={{ $json.chunks }}",
+        "options": {}
+      },
+      "id": "b7ecb64a-bb57-4c2f-8d82-a5a2172297d6",
+      "name": "Get top chunks matching query",
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "position": [
+        1968,
+        528
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "pineconeIndex": {
+          "__rl": true,
+          "mode": "list",
+          "value": "test-index",
+          "cachedResultName": "test-index"
+        },
+        "options": {}
+      },
+      "id": "c2448d9c-b0f0-45ee-a03f-fa31b657185b",
+      "name": "Add to Pinecone vector store",
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "position": [
+        2384,
+        -192
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "chunkSize": 3000,
+        "chunkOverlap": 200,
+        "options": {}
+      },
+      "id": "e286fb0c-4517-4ed4-8b7f-b45e94d2b693",
+      "name": "Recursive Character Text Splitter",
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "position": [
+        2496,
+        192
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 1. Setup: Fetch file from Google Drive, split it into chunks and insert into a vector database\nNote that running this part multiple times will insert multiple copies into your DB",
+        "height": 728.4168721167887,
+        "width": 1086.039382705461,
+        "color": 7
+      },
+      "id": "57d02ba7-1b8b-4c6c-9bcc-2ca2e7714c9f",
+      "name": "Sticky Note5",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1680,
+        -368
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "# Try me out\n1. In Pinecone, create an index with 1536 dimensions and select it in the two vector store nodes\n2. Populate Pinecone by clicking the 'test workflow' button below\n3. Click the 'chat' button below and enter the following:\n\n_Which email provider does the creator of Bitcoin use?_",
+        "height": 350.7942096493649
+      },
+      "id": "7924c6ed-3062-409d-957a-8f7bdf38d98a",
+      "name": "Sticky Note6",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1216,
+        -288
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "jsonSchema": "{\n \"type\": \"object\",\n \"properties\": {\n \"answer\": {\n \"type\": \"string\"\n },\n \"citations\": {\n \"type\": \"array\",\n \"items\": {\n \"type\": \"number\"\n }\n }\n }\n}"
+      },
+      "id": "ca956bdc-5b8b-439b-9a06-b7e61e86adc6",
+      "name": "Structured Output Parser1",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "position": [
+        2768,
+        752
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 2. Chat with file, getting citations in reponse",
+        "height": 548.5086735412393,
+        "width": 1693.989843925635,
+        "color": 7
+      },
+      "id": "73ec4d4d-0b07-4e48-85c3-5894f9c8710c",
+      "name": "Sticky Note7",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1696,
+        416
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "Will fetch the Bitcoin whitepaper, but you can change this",
+        "height": 257.75985739596473,
+        "width": 179.58883583572606,
+        "color": 7
+      },
+      "id": "d40e4e8e-ce67-4b16-9155-ce9650366fde",
+      "name": "Sticky Note8",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1696,
+        -288
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "818cfcb3-1c1e-4c6f-8eb7-68dc4df7d2c4",
+      "name": "Embeddings OpenAI1",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "position": [
+        2608,
+        240
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 1. Setup: Fetch file from Google Drive, split it into chunks and insert into a vector database\nNote that running this part multiple times will insert multiple copies into your DB",
+        "height": 728.4168721167887,
+        "width": 1086.039382705461,
+        "color": 7
+      },
+      "id": "be3e9f74-daa6-4f43-84ec-9ed2bee2fb45",
+      "name": "Sticky Note9",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1968,
+        -160
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "file_url",
+                "value": "={{ $json.file_url }}"
+              },
+              {
+                "name": "file_name",
+                "value": "={{ $('Add in metadata1').item.json.file_name }}"
+              }
+            ]
+          }
+        }
+      },
+      "id": "cdd32f4b-8e6a-41c3-b258-008e83fca177",
+      "name": "Default Data Loader1",
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "position": [
+        2784,
+        240
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "50025ff5-1b53-475f-b150-2aafef1c4c21",
+              "name": "file_url",
+              "type": "string",
+              "value": " https://drive.google.com/file/d/11Koq9q53nkk0F5Y8eZgaWJUVR03I4-MM/view"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2e82a373-0582-4712-a2e2-28b6faebc932",
+      "name": "Set file URL in Google Drive1",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        2032,
+        16
+      ],
+      "typeVersion": 3.3
+    },
+    {
+      "parameters": {
+        "content": "# Try me out\n1. In Pinecone, create an index with 1536 dimensions and select it in the two vector store nodes\n2. Populate Pinecone by clicking the 'test workflow' button below\n3. Click the 'chat' button below and enter the following:\n\n_Which email provider does the creator of Bitcoin use?_",
+        "height": 350.7942096493649
+      },
+      "id": "7d6d1cf1-a516-44fe-a66c-5c41f4324319",
+      "name": "Sticky Note10",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1504,
+        -80
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Add a new field called 'myNewField' to the JSON of the item\n$input.item.json.file_name = $input.item.binary.data.fileName;\n$input.item.json.file_ext = $input.item.binary.data.fileExtension;\n$input.item.json.file_url = $('Set file URL in Google Drive1').item.json.file_url\n\nreturn $input.item;"
+      },
+      "id": "0bf4ac4f-ce93-43aa-bfc4-76ad4c43da95",
+      "name": "Add in metadata1",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        2448,
+        16
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "mode": "url",
+          "value": "={{ $json.file_url }}"
+        },
+        "options": {}
+      },
+      "id": "5ac1512b-be22-4a96-926a-a8da1904e20d",
+      "name": "Download file1",
+      "type": "n8n-nodes-base.googleDrive",
+      "position": [
+        2224,
+        16
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "jsCode": "let out = \"\"\nfor (const i in $input.all()) {\n let itemText = \"--- CHUNK \" + i + \" ---\\n\"\n itemText += $input.all()[i].json.document.pageContent + \"\\n\"\n itemText += \"\\n\"\n out += itemText\n}\n\nreturn {\n 'context': out\n};"
+      },
+      "id": "6451f0d4-0df0-4f16-8277-a136e13d56e8",
+      "name": "Prepare chunks1",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        2624,
+        736
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "2adb5218-cafb-4111-9fed-ed1e70cc3015",
+      "name": "Embeddings OpenAI3",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "position": [
+        2256,
+        960
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "bf38cf13-50ab-4d76-a622-35f4408fcc5d",
+      "name": "OpenAI Chat Model1",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        2864,
+        960
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "236047ff-75a2-47fd-b338-1e9763c4015e",
+              "name": "chunks",
+              "type": "number",
+              "value": 4
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "a9e4e493-7924-4d1c-a47b-b8a233228823",
+      "name": "Set max chunks to send to model1",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        2032,
+        736
+      ],
+      "typeVersion": 3.3
+    },
+    {
+      "parameters": {
+        "jsonSchema": "{\n \"type\": \"object\",\n \"properties\": {\n \"answer\": {\n \"type\": \"string\"\n },\n \"citations\": {\n \"type\": \"array\",\n \"items\": {\n \"type\": \"number\"\n }\n }\n }\n}"
+      },
+      "id": "c8efb3d2-87a0-4e52-8127-847140e3c303",
+      "name": "Structured Output Parser2",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "position": [
+        3056,
+        960
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "67ecefcf-a30c-4cc4-89ca-b9b23edd6585",
+              "name": "citations",
+              "type": "array",
+              "value": "={{ $json.citations.map(i => '[' + $('Get top chunks matching query1').all()[$json.citations].json.document.metadata.file_name + ', lines ' + $('Get top chunks matching query1').all()[$json.citations].json.document.metadata['loc.lines.from'] + '-' + $('Get top chunks matching query1').all()[$json.citations].json.document.metadata['loc.lines.to'] + ']') }}"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "e042b9d6-9db2-4796-9039-959b42e384e1",
+      "name": "Compose citations1",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        3232,
+        736
+      ],
+      "typeVersion": 3.3
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d77956c4-0ff4-4c64-80c2-9da9d4c8ad34",
+              "name": "text",
+              "type": "string",
+              "value": "={{ $json.answer }} {{ $if(!$json.citations.isEmpty(), \"\\n\" + $json.citations.join(\"\"), '') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c77552a6-d1b3-44eb-b219-6ef8ee511dd3",
+      "name": "Generate response1",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        3456,
+        736
+      ],
+      "typeVersion": 3.3
+    },
+    {
+      "parameters": {
+        "content": "## 2. Chat with file, getting citations in reponse",
+        "height": 548.5086735412393,
+        "width": 1693.989843925635,
+        "color": 7
+      },
+      "id": "3229e39c-2a38-49fc-8eb2-5fa5983e4ef4",
+      "name": "Sticky Note11",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1984,
+        624
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Use the following pieces of context to answer the question at the end. If you don't know the answer, just say that you don't know, don't try to make up an answer. Important: In your response, also include the the indexes of the chunks you used to generate the answer.\n\n{{ $json.context }}\n\nQuestion: {{ $(\"Chat Trigger\").first().json.chatInput }}\nHelpful Answer:",
+        "hasOutputParser": true
+      },
+      "id": "8f52cab5-0248-4920-ad1e-eb1e62a54e5a",
+      "name": "Answer the query based on chunks1",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [
+        2848,
+        736
+      ],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "content": "Will fetch the Bitcoin whitepaper, but you can change this",
+        "height": 257.75985739596473,
+        "width": 179.58883583572606,
+        "color": 7
+      },
+      "id": "ad0ca8bd-c3da-45d8-a881-b6e113b097eb",
+      "name": "Sticky Note12",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1984,
+        -80
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "mode": "load",
+        "pineconeIndex": {
+          "__rl": true,
+          "mode": "list",
+          "value": "test-index",
+          "cachedResultName": "test-index"
+        },
+        "prompt": "={{ $json.chatInput }}",
+        "topK": "={{ $json.chunks }}",
+        "options": {}
+      },
+      "id": "ec9a6ae9-db21-4ad0-bbae-420c2aa8ff6b",
+      "name": "Get top chunks matching query1",
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "position": [
+        2256,
+        736
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "pineconeIndex": {
+          "__rl": true,
+          "mode": "list",
+          "value": "test-index",
+          "cachedResultName": "test-index"
+        },
+        "options": {}
+      },
+      "id": "cc950006-ead3-4dc7-bd77-cfb7400f36cc",
+      "name": "Add to Pinecone vector store1",
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "position": [
+        2672,
+        16
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "chunkSize": 3000,
+        "chunkOverlap": 200,
+        "options": {}
+      },
+      "id": "0ac4328c-d419-413f-b81b-8c91e1ed095a",
+      "name": "Recursive Character Text Splitter1",
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "position": [
+        2784,
+        400
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "amount": 45
+      },
+      "id": "7cb83cc0-4f24-4963-9ce1-0ed9fc3b0393",
+      "name": "Wait",
+      "type": "n8n-nodes-base.wait",
+      "position": [
+        3520,
+        816
+      ],
+      "webhookId": "f10708f0-38c6-4c75-b635-37222d5b183a",
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "content": "**40 at a time seems to be the memory limit on my server - run until complete with batches of 40 or increase based on your server memory**\n",
+        "height": 268.48353140372035,
+        "width": 327.8244990224782,
+        "color": 7
+      },
+      "id": "2c9024e1-a5f0-4900-bdf6-9bbd3a6b6921",
+      "name": "Sticky Note36",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3120,
+        896
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "**Firecrawl.dev retrieves markdown inc. title, description, links & content. First define the URLs you'd like to scrape**\n",
+        "height": 248.90718753310907,
+        "width": 574.7594700148138,
+        "color": 7
+      },
+      "id": "cb474b51-ac49-40dc-baaf-4e1cb3f4ac47",
+      "name": "Sticky Note28",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2528,
+        928
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {},
+      "id": "900beab1-1a38-40f7-a955-100e1adee7b1",
+      "name": "Connect to your own data source",
+      "type": "n8n-nodes-base.noOp",
+      "position": [
+        3952,
+        1008
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {},
+      "id": "1b5437d1-e42b-42dc-b6c2-5f7657b640d0",
+      "name": "Get urls from own data source",
+      "type": "n8n-nodes-base.noOp",
+      "position": [
+        2576,
+        992
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cc2c6af0-68d3-49eb-85fe-3288d2ed0f6b",
+              "name": "Page",
+              "type": "array",
+              "value": "[\"https://www.automake.io/\", \"https://www.n8n.io/\"]"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "3a97222a-7c46-4e03-bd00-0fd414e01cfe",
+      "name": "Example fields from data source",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        2768,
+        992
+      ],
+      "notesInFlow": true,
+      "typeVersion": 3.4,
+      "notes": "Define URLs in array"
+    },
+    {
+      "parameters": {
+        "content": "**REQUIRED**\nConnect to your database of urls to input. Name the column `Page` like in the `Example fields from data source` node and make sure it has one link per row like `split out page urls`",
+        "height": 94.13486342358942,
+        "width": 510.3561134140244,
+        "color": 3
+      },
+      "id": "03e2094d-cc7b-412d-871b-889e7909f6b7",
+      "name": "Sticky Note33",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2528,
+        1184
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "**REQUIRED**\nUpdate the Auth parameter to your own [Firecrawl](https://firecrawl.dev) dev token\n\n**Header Auth parameter**\nname - Authorization\nvalue - your-own-api-key",
+        "height": 168.68864948728321,
+        "width": 284.87764467541297,
+        "color": 3
+      },
+      "id": "70dfcea5-1794-4355-98e2-3930a64406f4",
+      "name": "Sticky Note34",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3472,
+        1184
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "**REQUIRED** \nOutput the data to your own data source e.g. Airtable",
+        "height": 91.91340067739628,
+        "width": 284.87764467541297,
+        "color": 3
+      },
+      "id": "65618ddc-6104-4f38-ba6c-68831c9ab259",
+      "name": "Sticky Note35",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3936,
+        1184
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "**Respect API limits (10 requests per min)**\n",
+        "height": 189.23753199986137,
+        "width": 181.96744211154697,
+        "color": 7
+      },
+      "id": "8e7d48c0-588f-44e8-8ebf-a492472d5e7e",
+      "name": "Sticky Note37",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3472,
+        768
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "maxItems": 40
+      },
+      "id": "d4295652-9e15-4759-bd2d-565d5821a01e",
+      "name": "40 items at a time",
+      "type": "n8n-nodes-base.limit",
+      "position": [
+        3152,
+        992
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "batchSize": 10,
+        "options": {}
+      },
+      "id": "f3551ca5-8bfa-4b32-865a-112c10b5f44f",
+      "name": "10 at a time",
+      "type": "n8n-nodes-base.splitInBatches",
+      "position": [
+        3312,
+        992
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3a959c64-4c3c-4072-8427-67f6f6ecba1b",
+              "name": "title",
+              "type": "string",
+              "value": "={{ $json.data.metadata.title }}"
+            },
+            {
+              "id": "d2da0859-a7a0-4c39-913a-150ecb95d075",
+              "name": "description",
+              "type": "string",
+              "value": "={{ $json.data.metadata.description }}"
+            },
+            {
+              "id": "62bd2d76-b78d-4501-a59b-a25ed7b345b0",
+              "name": "content",
+              "type": "string",
+              "value": "={{ $json.data.markdown }}"
+            },
+            {
+              "id": "d4c712fa-b52a-498f-8abc-26dc72be61f7",
+              "name": "links",
+              "type": "string",
+              "value": "={{ $json.data.links }} "
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "bad526c6-6e63-407a-83b4-2eaecd493c67",
+      "name": "Markdown data and Links",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        3728,
+        1008
+      ],
+      "notesInFlow": true,
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "Page",
+        "options": {}
+      },
+      "id": "82eda20d-bfcb-41e0-8214-b37e1d9e1847",
+      "name": "Split out page URLs",
+      "type": "n8n-nodes-base.splitOut",
+      "position": [
+        2960,
+        992
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.firecrawl.dev/v1/scrape",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n \"url\": \"{{ $json.Page }}\",\n \"formats\" : [\"markdown\", \"links\"]\n} ",
+        "options": {}
+      },
+      "id": "50c29b7d-8d69-43d0-b7b6-bd0886837744",
+      "name": "Retrieve Page Markdown and Links",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        3536,
+        1008
+      ],
+      "retryOnFail": true,
+      "typeVersion": 4.2,
+      "waitBetweenTries": 5000,
+      "notes": "curl -X POST https://api.firecrawl.dev/v1/scrape \\\n -H 'Content-Type: application/json' \\\n -H 'Authorization: Bearer YOUR_API_KEY' \\\n -d '{\n \"url\": \"https://docs.firecrawl.dev\",\n \"formats\" : [\"markdown\", \"html\"]\n }'\n"
+    },
+    {
+      "parameters": {
+        "content": "## Convert URL HTML to Markdown and Get Page Links\n\n## Use Case\nTransform web pages into AI-friendly markdown format:\n- You need to process webpage content for LLM analysis\n- You want to extract both content and links from web pages\n- You need clean, formatted text without HTML markup\n- You want to respect API rate limits while crawling pages\n\n## What this Workflow Does\nThe workflow uses Firecrawl.dev API to process webpages:\n- Converts HTML content to markdown format\n- Extracts all links from each webpage\n- Handles API rate limiting automatically\n- Processes URLs in batches from your database\n\n## Setup\n1. Create a [Firecrawl.dev](https://www.firecrawl.dev/) account and get your API key\n2. Add your Firecrawl API key to the HTTP Request node's Authorization header\n3. Connect your URL database to the input node (column name must be \"Page\") or edit the array in `Example fields from data source`\n4. Configure your preferred output database connection\n\n## How to Adjust it to Your Needs\n- Modify input source to pull URLs from different databases\n- Adjust rate limiting parameters if needed\n- Customize output format for your specific use case\n\n\nMade by Simon @ [automake.io](https://automake.io)\n",
+        "height": 818.5240734585421,
+        "width": 581.9949654101088,
+        "color": 4
+      },
+      "id": "ecee0aa1-8451-446b-a152-06840fee2f13",
+      "name": "Sticky Note38",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1728,
+        528
+      ],
+      "typeVersion": 1
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Download Resume": {
+      "main": [
+        [
+          {
+            "node": "PDF-to-Image API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PDF-to-Image API": {
+      "main": [
+        [
+          {
+            "node": "Resize Converted Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resize Converted Image": {
+      "main": [
+        [
+          {
+            "node": "Candidate Resume Analyser",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Candidate Resume Analyser",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Candidate Resume Analyser",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Candidate Resume Analyser": {
+      "main": [
+        [
+          {
+            "node": "Should Proceed To Stage 2?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Test workflow’": {
+      "main": [
+        [
+          {
+            "node": "Download Resume",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat Trigger": {
+      "main": [
+        [
+          {
+            "node": "Set max chunks to send to model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Add in metadata",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare chunks": {
+      "main": [
+        [
+          {
+            "node": "Answer the query based on chunks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add in metadata": {
+      "main": [
+        [
+          {
+            "node": "Add to Pinecone vector store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compose citations": {
+      "main": [
+        [
+          {
+            "node": "Generate response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Add to Pinecone vector store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Answer the query based on chunks",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI2": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Get top chunks matching query",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Add to Pinecone vector store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set file URL in Google Drive": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get top chunks matching query": {
+      "main": [
+        [
+          {
+            "node": "Prepare chunks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set max chunks to send to model": {
+      "main": [
+        [
+          {
+            "node": "Get top chunks matching query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Answer the query based on chunks": {
+      "main": [
+        [
+          {
+            "node": "Compose citations",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Answer the query based on chunks",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Add to Pinecone vector store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader1": {
+      "ai_document": [
+        [
+          {
+            "node": "Add to Pinecone vector store1",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set file URL in Google Drive1": {
+      "main": [
+        [
+          {
+            "node": "Download file1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add in metadata1": {
+      "main": [
+        [
+          {
+            "node": "Add to Pinecone vector store1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file1": {
+      "main": [
+        [
+          {
+            "node": "Add in metadata1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare chunks1": {
+      "main": [
+        [
+          {
+            "node": "Answer the query based on chunks1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI3": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Get top chunks matching query1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Answer the query based on chunks1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set max chunks to send to model1": {
+      "main": [
+        [
+          {
+            "node": "Get top chunks matching query1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser2": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Answer the query based on chunks1",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compose citations1": {
+      "main": [
+        [
+          {
+            "node": "Generate response1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Answer the query based on chunks1": {
+      "main": [
+        [
+          {
+            "node": "Compose citations1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get top chunks matching query1": {
+      "main": [
+        [
+          {
+            "node": "Prepare chunks1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter1": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader1",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "10 at a time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10 at a time": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Retrieve Page Markdown and Links",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "40 items at a time": {
+      "main": [
+        [
+          {
+            "node": "10 at a time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split out page URLs": {
+      "main": [
+        [
+          {
+            "node": "40 items at a time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Markdown data and Links": {
+      "main": [
+        [
+          {
+            "node": "Connect to your own data source",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get urls from own data source": {
+      "main": [
+        [
+          {
+            "node": "Example fields from data source",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Connect to your own data source": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Example fields from data source": {
+      "main": [
+        [
+          {
+            "node": "Split out page URLs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retrieve Page Markdown and Links": {
+      "main": [
+        [
+          {
+            "node": "Markdown data and Links",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "",
+  "meta": {
+    "instanceId": "f1073e0ef9d6c3f612165fb818e806875cadef32fd465fe392d4049f979c3bab"
+  },
+  "tags": []
+}
